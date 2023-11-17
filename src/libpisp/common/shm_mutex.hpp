@@ -18,7 +18,9 @@ public:
 	{
 		pthread_mutexattr_t attr;
 		pthread_mutexattr_init(&attr);
+#if !defined(ANDROID)
 		pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+#endif
 		pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
 		pthread_mutex_init(&mutex_, &attr);
 		pthread_mutexattr_destroy(&attr);
