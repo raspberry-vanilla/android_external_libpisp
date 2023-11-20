@@ -22,8 +22,8 @@ struct config_param
 {
 	uint32_t dirty_flag;
 	uint32_t dirty_flag_extra;
-	std::size_t offset;
-	std::size_t size;
+	size_t offset;
+	size_t size;
 };
 
 const config_param config_map[] = {

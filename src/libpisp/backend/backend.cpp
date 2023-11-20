@@ -22,8 +22,8 @@ struct config_param
 	uint32_t dirty_flags_bayer;
 	uint32_t dirty_flags_rgb;
 	uint32_t dirty_flags_extra;
-	std::size_t offset;
-	std::size_t size;
+	size_t offset;
+	size_t size;
 };
 
 const config_param config_map[] = {

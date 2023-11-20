@@ -21,19 +21,19 @@ namespace
 struct config_field
 {
 	std::string name;
-	std::size_t offset;
-	std::size_t size;
-	std::size_t num;
+	size_t offset;
+	size_t size;
+	size_t num;
 };
 
 struct config_block
 {
 	std::string name;
-	std::size_t offset;
+	size_t offset;
 	std::vector<struct config_field> fields;
 };
 
-const std::map<std::size_t, uint32_t> mask {
+const std::map<size_t, uint32_t> mask {
 	{ 1, 0x000000ff },
 	{ 2, 0x0000ffff },
 	{ 4, 0xffffffff },

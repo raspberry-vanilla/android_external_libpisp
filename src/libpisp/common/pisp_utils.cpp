@@ -174,7 +174,7 @@ int num_planes(pisp_image_format format)
 	return planes;
 }
 
-std::size_t get_plane_size(const pisp_image_format_config &config, int plane)
+size_t get_plane_size(const pisp_image_format_config &config, int plane)
 {
 	uint64_t stride = abs(plane ? config.stride2 : config.stride); // in case vflipped?
 	uint64_t plane_size = 0;
@@ -185,12 +185,12 @@ std::size_t get_plane_size(const pisp_image_format_config &config, int plane)
 			PISP_IMAGE_FORMAT_bps_8(config.format)
 				? PISP_WALLPAPER_WIDTH
 				: (PISP_IMAGE_FORMAT_bps_16(config.format) ? PISP_WALLPAPER_WIDTH / 2 : PISP_WALLPAPER_WIDTH / 4 * 3);
-		std::size_t num_rolls = (config.width + pixels_in_roll - 1) / pixels_in_roll;
+		size_t num_rolls = (config.width + pixels_in_roll - 1) / pixels_in_roll;
 		plane_size = num_rolls * stride;
 	}
 	else
 	{
-		std::size_t height = plane && PISP_IMAGE_FORMAT_sampling_420(config.format) ? config.height >> 1
+		size_t height = plane && PISP_IMAGE_FORMAT_sampling_420(config.format) ? config.height >> 1
 																					: config.height;
 		plane_size = height * stride;
 	}
