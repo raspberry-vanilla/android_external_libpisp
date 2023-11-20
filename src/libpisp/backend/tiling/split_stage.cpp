@@ -78,7 +78,7 @@ int SplitStage::PushEndDown(int input_end, Dir dir)
 	if (input_interval_.length == 0)
 	{
 		PISP_LOG(fatal, "(" << name_ << ") Neither branch can make progress");
-		throw TilingException();
+		abort(); //throw TilingException();
 	}
 
 	for (auto d : downstream_)

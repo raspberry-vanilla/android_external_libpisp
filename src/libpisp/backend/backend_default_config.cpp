@@ -31,7 +31,7 @@ void initialise_debin(pisp_be_debin_config &debin, const json &root)
 	auto coefs = root["debin"]["coefs"].get<std::vector<int8_t>>();
 
 	if (coefs.size() != num_coefs)
-		throw std::runtime_error("Debin filter size mismatch");
+		abort(); //throw std::runtime_error("Debin filter size mismatch");
 
 	memcpy(debin.coeffs, coefs.data(), sizeof(debin.coeffs));
 	debin.h_enable = debin.v_enable = 1;
@@ -73,7 +73,7 @@ void initialise_gamma(pisp_be_gamma_config &gamma, const json &root)
 
 		y = pwl.Eval(x);
 		if (y < 0 || (i && y < lastY))
-			throw std::runtime_error("initialise_gamma: Malformed LUT");
+			abort(); //throw std::runtime_error("initialise_gamma: Malformed LUT");
 
 		if (i)
 		{
@@ -103,7 +103,7 @@ void read_resample(std::map<std::string, pisp_be_resample_config> &resample_filt
 		auto coefs = filter.get<std::vector<int16_t>>();
 
 		if (coefs.size() != num_coefs)
-			throw std::runtime_error("read_resample: Incorrect number of filter coefficients");
+			abort(); //throw std::runtime_error("read_resample: Incorrect number of filter coefficients");
 
 		memcpy(r.coef, coefs.data(), sizeof(r.coef));
 		resample_filter_map.emplace(name, r);
@@ -121,7 +121,7 @@ void read_resample(std::map<std::string, pisp_be_resample_config> &resample_filt
 			break;
 	}
 	if (i != resample_select_list.size())
-		throw std::runtime_error("read_resample: Incorrect number of filters");
+		abort(); //throw std::runtime_error("read_resample: Incorrect number of filters");
 }
 
 // Macros for the sharpening filters, to avoid repeating the same code 5 times
@@ -196,12 +196,12 @@ void read_ycbcr(std::map<std::string, pisp_be_ccm_config> &ycbcr_map,
 
 			auto coeffs = matrix["coeffs"].get<std::vector<int16_t>>();
 			if (coeffs.size() != 9)
-				throw std::runtime_error("read_ycbcr: Incorrect number of matrix coefficients");
+				abort(); //throw std::runtime_error("read_ycbcr: Incorrect number of matrix coefficients");
 			memcpy(ccm.coeffs, coeffs.data(), sizeof(ccm.coeffs));
 
 			auto offsets = matrix["offsets"].get<std::vector<int32_t>>();
 			if (offsets.size() != 3)
-				throw std::runtime_error("read_ycbcr: Incorrect number of matrix offsets");
+				abort(); //throw std::runtime_error("read_ycbcr: Incorrect number of matrix offsets");
 			memcpy(ccm.offsets, offsets.data(), sizeof(ccm.offsets));
 
 			if (key == "ycbcr")
@@ -273,7 +273,7 @@ void BackEnd::initialiseDefaultConfig(const std::string &filename)
 										: filename;
 	std::ifstream ifs(file);
 	if (!ifs.good())
-		throw std::runtime_error("BE: Could not find config json file: " + file);
+		abort(); //throw std::runtime_error("BE: Could not find config json file: " + file);
 
 	json root = json::parse(ifs);
 	ifs.close();

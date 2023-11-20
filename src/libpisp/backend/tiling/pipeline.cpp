@@ -76,7 +76,7 @@ int Pipeline::tileDirection(Dir dir, void *mem, size_t num_items, size_t item_si
 	{
 		PISP_LOG(debug, "----------------------------------------------------------------");
 		if (num_tiles == num_items)
-			throw std::runtime_error("Too many tiles!");
+			abort(); //abort(); //throw std::runtime_error("Too many tiles!");
 		for (auto s : outputs_)
 			s->PushStartUp(s->GetOutputInterval().End(), dir);
 		for (auto s : inputs_)
