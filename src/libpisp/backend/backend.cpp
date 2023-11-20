@@ -42,7 +42,7 @@ void BackEnd::SetGlobal(pisp_be_global_config const &global)
 		retile_ = true; // must retile when rescale change
 
 	if (global.rgb_enables & PISP_BE_RGB_ENABLE_HOG)
-		throw std::runtime_error("HOG output is not supported.");
+		abort(); //throw std::runtime_error("HOG output is not supported.");
 
 	be_config_.dirty_flags_bayer |=
 		(global.bayer_enables & ~be_config_.global.bayer_enables); // label anything newly enabled as dirty
