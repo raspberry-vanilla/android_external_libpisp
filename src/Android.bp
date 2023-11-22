@@ -1,0 +1,43 @@
+//
+// Copyright (C) 2023 KonstaKANG
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+
+cc_library_headers {
+    name: "libpisp_headers",
+    vendor: true,
+    export_include_dirs: [
+        ".",
+        "libpisp",
+    ],
+}
+
+cc_library_shared {
+    name: "libpisp",
+    vendor: true,
+    header_libs: [
+        "libpisp_headers",
+        "nlohmann_headers",
+    ],
+    srcs: [
+        "libpisp/backend/tiling/*.cpp",
+        "libpisp/backend/*.cpp",
+        "libpisp/common/*.cpp",
+        "libpisp/frontend/*.cpp",
+        "libpisp/variants/*.cpp",
+    ],
+    cflags: [
+        "-Werror",
+        "-Wno-unused-parameter",
+        "-DPISP_LOGGING_ENABLE=0",
+    ],
+    required: ["backend_default_config.json"],
+}
+
+prebuilt_etc {
+    name: "backend_default_config.json",
+    vendor: true,
+    sub_dir: "libcamera/libpisp",
+    src: "libpisp/backend/backend_default_config.json",
+}

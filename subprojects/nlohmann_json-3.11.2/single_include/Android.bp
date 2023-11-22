@@ -1,0 +1,11 @@
+//
+// Copyright (C) 2023 KonstaKANG
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+
+cc_library_headers {
+    name: "nlohmann_headers",
+    vendor: true,
+    export_include_dirs: ["."],
+}
