@@ -1,6 +1,9 @@
+# SPDX-License-Identifier: CC0-1.0
+# Copyright (C) 2023, Raspberry Pi Ltd
+
 project('libpisp', 'c', 'cpp',
         meson_version : '>= 0.58.0',
-        version : '1.0.2',
+        version : '1.0.3',
         default_options : [
             'werror=true',
             'warning_level=2',
