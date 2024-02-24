@@ -8,7 +8,7 @@
 
 namespace libpisp {
 
-const std::string versionString {"1.0.3"};
+const std::string versionString {"1.0.4"};
 
 const std::string& version()
 {
