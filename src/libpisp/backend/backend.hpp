@@ -7,8 +7,9 @@
  */
 #pragma once
 
-#include <map>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "common/shm_mutex.hpp"
@@ -22,7 +23,7 @@
 namespace libpisp
 {
 
-class BackEnd
+class BackEnd final
 {
 public:
 	struct Config
@@ -59,7 +60,6 @@ public:
 	void SetGlobal(pisp_be_global_config const &global);
 	void GetGlobal(pisp_be_global_config &global) const;
 	void SetInputFormat(pisp_image_format_config const &input_format);
-	void SetInputBuffer(pisp_be_input_buffer_config const &input_buffer);
 	void SetDecompress(pisp_decompress_config const &decompress);
 	void SetDpc(pisp_be_dpc_config const &dpc);
 	void SetGeq(pisp_be_geq_config const &geq);
@@ -146,7 +146,20 @@ public:
 		return mutex_.try_lock();
 	}
 
-protected:
+private:
+	struct BeConfigExtra
+	{
+		// Non-register fields:
+		pisp_be_lsc_extra lsc;
+		pisp_be_cac_extra cac;
+		pisp_be_downscale_extra downscale[PISP_BACK_END_NUM_OUTPUTS];
+		pisp_be_resample_extra resample[PISP_BACK_END_NUM_OUTPUTS];
+		pisp_be_crop_config crop;
+		uint32_t dirty_flags_bayer; //these use pisp_be_bayer_enable
+		uint32_t dirty_flags_rgb; //use pisp_be_rgb_enable
+		uint32_t dirty_flags_extra; //these use pisp_be_dirty_t
+	};
+
 	void finaliseConfig();
 	void updateSmartResize();
 	void updateTiles();
@@ -157,8 +170,9 @@ protected:
 	void initialiseDefaultConfig(const std::string &filename);
 
 	Config config_;
-	const PiSPVariant &variant_;
+	const PiSPVariant variant_;
 	pisp_be_config be_config_;
+	BeConfigExtra be_config_extra_;
 	pisp_image_format_config max_input_;
 	bool retile_;
 	bool finalise_tiling_;
@@ -168,14 +182,17 @@ protected:
 	std::vector<SmartResize> smart_resize_;
 	uint32_t smart_resize_dirty_;
 
-private:
 	// Default config
-	std::map<std::string, pisp_be_ccm_config> ycbcr_map_;
-	std::map<std::string, pisp_be_ccm_config> inverse_ycbcr_map_;
-	std::map<std::string, pisp_be_resample_config> resample_filter_map_;
+	// We use std::vector<std::pair<.,.>> insead of std::map<.,.> to ensure this object provides a standard layout.
+	std::vector<std::pair<std::string, pisp_be_ccm_config>> ycbcr_map_;
+	std::vector<std::pair<std::string, pisp_be_ccm_config>> inverse_ycbcr_map_;
+	std::vector<std::pair<std::string, pisp_be_resample_config>> resample_filter_map_;
 	std::vector<std::pair<double, std::string>> resample_select_list_;
 	pisp_be_sharpen_config default_sharpen_;
 	pisp_be_sh_fc_combine_config default_shfc_;
 };
+
+// This is required to ensure we can safely share a BackEnd object across multiple processes.
+static_assert(std::is_standard_layout<BackEnd>::value, "BackEnd must be a standard layout type");
 
 } // namespace libpisp

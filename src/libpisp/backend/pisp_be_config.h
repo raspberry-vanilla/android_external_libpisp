@@ -397,14 +397,8 @@ typedef struct {
 } pisp_be_hog_buffer_config;
 
 typedef struct {
-	/* I/O configuration: */
-	pisp_be_input_buffer_config input_buffer;
-	pisp_be_tdn_input_buffer_config tdn_input_buffer;
-	pisp_be_stitch_input_buffer_config stitch_input_buffer;
-	pisp_be_tdn_output_buffer_config tdn_output_buffer;
-	pisp_be_stitch_output_buffer_config stitch_output_buffer;
-	pisp_be_output_buffer_config output_buffer[PISP_BACK_END_NUM_OUTPUTS];
-	pisp_be_hog_buffer_config hog_buffer;
+	/* For backward compatibility */
+	uint8_t pad0[112];
 	/* Processing configuration: */
 	pisp_be_global_config global;
 	pisp_image_format_config input_format;
@@ -445,18 +439,11 @@ typedef struct {
 				output_format[PISP_BACK_END_NUM_OUTPUTS];
 	pisp_be_hog_config hog;
 	pisp_be_axi_config axi;
-	/* Non-register fields: */
-	pisp_be_lsc_extra lsc_extra;
-	pisp_be_cac_extra cac_extra;
-	pisp_be_downscale_extra
-				downscale_extra[PISP_BACK_END_NUM_OUTPUTS];
-	pisp_be_resample_extra resample_extra[PISP_BACK_END_NUM_OUTPUTS];
-	pisp_be_crop_config crop;
-	pisp_image_format_config hog_format;
-	uint32_t dirty_flags_bayer; /* these use pisp_be_bayer_enable */
-	uint32_t dirty_flags_rgb; /* use pisp_be_rgb_enable */
-	uint32_t dirty_flags_extra; /* these use pisp_be_dirty_t */
+	/* For backward compatibility */
+	uint8_t pad1[84];
 } pisp_be_config;
+
+static_assert(sizeof(pisp_be_config) == 6476, "pisp_be_config not packed as expected");
 
 /*
  * We also need a tile structure to describe the size of the tiles going
