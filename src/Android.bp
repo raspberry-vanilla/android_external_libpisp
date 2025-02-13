@@ -21,6 +21,7 @@ cc_library_shared {
         "nlohmann_headers",
     ],
     srcs: [
+        "helpers/*.cpp",
         "libpisp/backend/tiling/*.cpp",
         "libpisp/backend/*.cpp",
         "libpisp/common/*.cpp",
@@ -31,6 +32,7 @@ cc_library_shared {
         "-fexceptions",
         "-Werror",
         "-Wno-address-of-packed-member",
+        "-Wno-constant-conversion",
         "-Wno-unused-parameter",
         "-DPISP_LOGGING_ENABLE=0",
     ],
