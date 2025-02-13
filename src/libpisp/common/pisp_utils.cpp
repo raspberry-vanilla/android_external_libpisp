@@ -4,8 +4,10 @@
  *
  * pisp_utils.cpp - PiSP buffer helper utilities
  */
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <map>
 
 #include "backend/pisp_be_config.h"
 
@@ -57,7 +59,7 @@ uint32_t compute_x_offset(uint32_t /* pisp_image_format */ format, int x)
 	return x_offset;
 }
 
-void compute_stride_align(pisp_image_format_config &config, int align)
+void compute_stride_align(pisp_image_format_config &config, int align, bool preserve_subsample_ratio)
 {
 	if (PISP_IMAGE_FORMAT_WALLPAPER(config.format))
 	{
@@ -95,19 +97,24 @@ void compute_stride_align(pisp_image_format_config &config, int align)
 		// image in memory must be sufficiently aligned
 		config.stride = (config.stride + align - 1) & ~(align - 1);
 		config.stride2 = (config.stride2 + align - 1) & ~(align - 1);
+
+		// For YUV420/422 formats, ensure the stride ratio matches the subample ratio for the planes.
+		if (preserve_subsample_ratio && PISP_IMAGE_FORMAT_PLANAR(config.format) &&
+			(PISP_IMAGE_FORMAT_SAMPLING_422(config.format) || PISP_IMAGE_FORMAT_SAMPLING_420(config.format)))
+			config.stride = config.stride2 << 1;
 	}
 }
 
-void compute_stride(pisp_image_format_config &config)
+void compute_stride(pisp_image_format_config &config, bool preserve_subsample_ratio)
 {
 	// Our preferred alignment is really 64 bytes, though 16 should work too. Use 16 for now, as it gives better test coverage.
-	compute_stride_align(config, PISP_BACK_END_OUTPUT_MIN_ALIGN);
+	compute_stride_align(config, PISP_BACK_END_OUTPUT_MIN_ALIGN, preserve_subsample_ratio);
 }
 
-void compute_optimal_stride(pisp_image_format_config &config)
+void compute_optimal_stride(pisp_image_format_config &config, bool preserve_subsample_ratio)
 {
 	// Use our preferred alignment of 64 bytes.
-	compute_stride_align(config, PISP_BACK_END_OUTPUT_MAX_ALIGN);
+	compute_stride_align(config, PISP_BACK_END_OUTPUT_MAX_ALIGN, preserve_subsample_ratio);
 }
 
 void compute_addr_offset(const pisp_image_format_config &config, int x, int y, uint32_t *addr_offset,
@@ -202,6 +209,58 @@ std::size_t get_plane_size(const pisp_image_format_config &config, int plane)
 	}
 
 	return plane_size >= (1ULL << 32) ? 0 : plane_size;
+}
+
+static const std::map<std::string, uint32_t> &formats_table()
+{
+	// Note that alternate names and plane orderings are not defined to keep a 1:1 mapping.
+	static const std::map<std::string, uint32_t> formats = {
+		{ "YUV444P", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_444 +
+						PISP_IMAGE_FORMAT_PLANARITY_PLANAR },
+		{ "YUV422P", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_422 +
+						PISP_IMAGE_FORMAT_PLANARITY_PLANAR },
+		{ "YUV420P", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_420 +
+						PISP_IMAGE_FORMAT_PLANARITY_PLANAR },
+		{ "NV12", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_420 +
+					  PISP_IMAGE_FORMAT_PLANARITY_SEMI_PLANAR },
+		{ "NV21", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_420 +
+					  PISP_IMAGE_FORMAT_PLANARITY_SEMI_PLANAR + PISP_IMAGE_FORMAT_ORDER_SWAPPED },
+		{ "YUYV", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_422 +
+					  PISP_IMAGE_FORMAT_PLANARITY_INTERLEAVED },
+		{ "UYVY", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_422 +
+					  PISP_IMAGE_FORMAT_PLANARITY_INTERLEAVED + PISP_IMAGE_FORMAT_ORDER_SWAPPED },
+		{ "NV16", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_422 +
+					  PISP_IMAGE_FORMAT_PLANARITY_SEMI_PLANAR },
+		{ "NV61", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_8 + PISP_IMAGE_FORMAT_SAMPLING_422 +
+					  PISP_IMAGE_FORMAT_PLANARITY_SEMI_PLANAR + PISP_IMAGE_FORMAT_ORDER_SWAPPED },
+		{ "RGB888", PISP_IMAGE_FORMAT_THREE_CHANNEL },
+		{ "RGBX8888", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPP_32 + PISP_IMAGE_FORMAT_ORDER_SWAPPED },
+		{ "RGB161616", PISP_IMAGE_FORMAT_THREE_CHANNEL + PISP_IMAGE_FORMAT_BPS_16 },
+		{ "BAYER", PISP_IMAGE_FORMAT_BPS_16 + PISP_IMAGE_FORMAT_UNCOMPRESSED },
+		{ "PISP_COMP1", PISP_IMAGE_FORMAT_COMPRESSION_MODE_1 },
+		{ "PISP_COMP2", PISP_IMAGE_FORMAT_COMPRESSION_MODE_2 },
+	};
+
+	return formats;
+}
+
+unsigned int get_pisp_image_format(const std::string &format)
+{
+	auto it = formats_table().find(format);
+	if (it == formats_table().end())
+		return 0;
+
+	return it->second;
+}
+
+std::string get_pisp_image_format(uint32_t format)
+{
+	const auto &fmts = formats_table();
+	auto it = std::find_if(fmts.begin(), fmts.end(), [format](const auto &f) { return f.second == format; });
+	if (it == fmts.end())
+		return {};
+
+	return it->first;
 }
 
 } // namespace libpisp
