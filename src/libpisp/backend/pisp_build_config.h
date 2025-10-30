@@ -1,4 +1,4 @@
 #pragma once
 
-#define PISP_BE_CONFIG_DIR "/vendor/etc/libcamera/libpisp"
+#define PISP_BE_CONFIG_DIR "/apex/com.android.hardware.camera.libcamera/etc/libcamera/libpisp"
 
